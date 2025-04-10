@@ -98,7 +98,8 @@ def send_email_with_attachment(subject, body, to_email, pdf_buffer, filename="in
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain'))
 
-    # Use BytesIO buffer as attachment
+    # Read the BytesIO buffer and attach it as bytes
+    pdf_buffer.seek(0)  # Ensure the buffer is at the beginning
     part = MIMEApplication(pdf_buffer.read(), Name=filename)
     part['Content-Disposition'] = f'attachment; filename="{filename}"'
     msg.attach(part)
