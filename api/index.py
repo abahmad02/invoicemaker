@@ -13,7 +13,13 @@ async def send_invoice(request: Request):
         if not to_email:
             return JSONResponse(status_code=400, content={"error": "Missing 'to_email'"})
         
+        # Generate the invoice
         pdf_buffer = generate_invoice(data)
+        
+        # Ensure the buffer is at the start
+        pdf_buffer.seek(0)
+        
+        # Send the email
         send_email_with_attachment(
             subject="Your Solar Invoice",
             body=f"Dear {data['customer_name']}, please find your invoice attached.",
