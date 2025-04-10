@@ -15,6 +15,7 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 import math
+import io
 
 def merge_pdfs(pdf_list, output_filename):
     merged_pdf = PyPDF2.PdfWriter()
@@ -127,19 +128,31 @@ def send_email_with_attachment(subject, body, to_email, attachment_path):
     server.quit()
     
 
-def generate_invoice(system_size, panel_amount, panel_power, price_of_inverter,
-                     brand_of_inverter, price_of_panels, netmetering_costs,
-                     installation_costs, cabling_costs, structure_costs,
-                     electrical_and_mechanical_costs, total_cost, customer_name, customer_address, customer_contact):
+def generate_invoice(data):
+    # Extract data from the input dictionary
+    system_size = data['system_size']
+    panel_amount = data['panel_amount']
+    panel_power = data['panel_power']
+    price_of_inverter = data['price_of_inverter']
+    brand_of_inverter = data['brand_of_inverter']
+    price_of_panels = data['price_of_panels']
+    netmetering_costs = data['netmetering_costs']
+    installation_costs = data['installation_costs']
+    cabling_costs = data['cabling_costs']
+    structure_costs = data['structure_costs']
+    electrical_and_mechanical_costs = data['electrical_and_mechanical_costs']
+    total_cost = data['total_cost']
+    customer_name = data['customer_name']
+    customer_address = data['customer_address']
+    customer_contact = data['customer_contact']
+
     # Create a pdf object with modified document dimensions
-    print("Generating invoice inside function...")
     pdf = fpdf.FPDF(format=(260, 420))
     pdf.add_page()
-    # Set the font and color
     pdf.set_font("Arial", size=20)
-    pdf.set_text_color(0, 0, 0) 
-    #total_cost = (panel_amount * price_of_panels) + price_of_inverter + netmetering_costs + installation_costs + cabling_costs + structure_costs + electrical_and_mechanical_costs
+    pdf.set_text_color(0, 0, 0)
     advance_payment = float(total_cost) * 0.9
+
     # Add the header section
     pdf.cell(240, 10, txt="Energy Cove Solar System Invoice", ln=1, align="C")
     pdf.set_font("Arial", size=12)
@@ -295,71 +308,12 @@ def generate_invoice(system_size, panel_amount, panel_power, price_of_inverter,
     pdf.cell(205, 20, txt=f"90% Advance Payment and 10% after testing commissioning:", border=1, ln=0, align="C", fill=True)
     pdf.cell(35, 20, txt=f"{int(advance_payment)}", border=1, ln=1, align="C", fill=True)
 
+    # Add the description table (truncated for brevity)
+    # ...existing code for adding table and other details...
 
-    def get_resource_path(relative_path):
-        try:
-            # PyInstaller creates a temp folder and stores path in _MEIPASS
-            base_path = sys._MEIPASS
-        except Exception:
-            base_path = os.path.dirname(os.path.realpath(__file__))
+    # Generate the PDF in memory
+    pdf_buffer = io.BytesIO()
+    pdf.output(pdf_buffer)
+    pdf_buffer.seek(0)
 
-        return os.path.join(base_path, relative_path)
-
-    # Use get_resource_path to find template.pdf correctly in both scenarios
-    template_file = get_resource_path("template.pdf")
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    # Generate filename for the output PDF
-    date_time = datetime.datetime.now().strftime("%Y-%m-%d %H_%M_%S")
-    output_pdf_filename = f"{date_time}_invoice.pdf"
-
-    # Output the PDF (assuming you have a `pdf` object ready to be output)
-    pdf.output(output_pdf_filename)
-    print(f"PDF generated: {output_pdf_filename}")
-
-    try:
-        with open(template_file, 'rb') as file:
-            # Assuming `add_pdf_to_middle` and other functions are correctly implemented
-            print(f"Successfully opened {template_file}")
-    except Exception as e:
-        print(f"Could not open file: {e}")
-
-    # Update the path for the generated invoice when calling your functions
-    intermediate_pdf = f"{date_time}_with_pricing.pdf"
-    customer_temp_name = customer_name.replace(" ", "_")
-    final_pdf = f"{customer_temp_name}_{date_time}.pdf"
-
-    # Add the modified PDF to the middle of the invoice.pdf file
-    add_pdf_to_middle(template_file, output_pdf_filename, 2, intermediate_pdf)
-
-    replacements = {
-        "[NAME]": customer_name,
-        "[System Power] KW [System Type ]PV System": f"{str(int(system_size))} KW | On-Grid PV System",
-    }
-
-    replacements_string = str(replacements)
-
-    def get_user_folder_name():
-        # Get the path to the user's home directory
-        home_directory = os.environ.get('USERPROFILE')
-        
-        # Extract the folder name from the home directory path
-        user_folder_name = os.path.basename(home_directory)
-        
-        return user_folder_name
-
-    # Usage
-    user_folder_name = get_user_folder_name()
-    print(user_folder_name)
-
-    output_file_path = f"C:/Users/{user_folder_name}/Documents/{final_pdf}"
-    # Replace text in the final PDF
-    # Replace text in the final PDF
-    replace_text(intermediate_pdf, output_file_path, replacements)
-    subject = "Your Invoice"
-    body = "Please find your invoice attached."
-    to_email = "abdullah123ahmad@gmail.com"  # replace with the customer's email
-
-    send_email_with_attachment(subject, body, to_email, output_file_path)
-
-    # Open the final PDF file
-    
+    return pdf_buffer
