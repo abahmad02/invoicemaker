@@ -54,7 +54,12 @@ import fitz  # Import the PyMuPDF library
 
 def replace_text(input_pdf, output_pdf, replacements, zoom_factor=3.0):
     # Open the existing PDF
-    doc = fitz.open(input_pdf)
+    # Detect if input_pdf is a BytesIO; if so, open from its bytes
+    if isinstance(input_pdf, io.BytesIO):
+        input_pdf.seek(0)
+        doc = fitz.open(stream=input_pdf.read(), filetype="pdf")
+    else:
+        doc = fitz.open(input_pdf)
 
     # Perform text replacements
     for page in doc:
