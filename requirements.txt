@@ -1,3 +1,5 @@
+fastapi
+uvicorn
 fpdf
 PyPDF2
 PyMuPDF
