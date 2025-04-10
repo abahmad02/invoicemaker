@@ -16,6 +16,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 import math
 import io
+import logging
 
 def merge_pdfs(pdf_list, output_filename):
     merged_pdf = PyPDF2.PdfWriter()
