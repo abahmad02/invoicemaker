@@ -54,44 +54,41 @@ def add_pdf_to_middle(existing_pdf, pdf_to_add, page_number, output_filename):
 import fitz  # Import the PyMuPDF library
 
 def replace_text(input_pdf, output_pdf, replacements, zoom_factor=3.0):
-    # Open the existing PDF
-    if isinstance(input_pdf, io.BytesIO):
-        input_pdf.seek(0)  # Ensure we're at the start of the stream
-        doc = fitz.open(stream=input_pdf.read(), filetype="pdf")
-    else:
-        doc = fitz.open(input_pdf)
-
-    # Perform text replacements
-    for page in doc:
-        for placeholder, replacement in replacements.items():
-            text_instances = page.search_for(placeholder)
-            for inst in text_instances:
-                rect = fitz.Rect(inst[0], inst[1], inst[2], inst[3])
-                page.draw_rect(rect, color=(1, 1, 1), fill=(1, 1, 1))
-                # Adjust the position for text insertion based on zoom_factor
-                page.insert_text(rect.bottom_left, replacement, fontsize=int(16), overlay=True)
-
-    # Create a new PDF
-    c = canvas.Canvas(output_pdf, pagesize=letter)
-
-    # Convert each page to an image at a higher resolution and add it to the new PDF
-    for page_number in range(len(doc)):
-        page = doc.load_page(page_number)  # Load the current page
-        mat = fitz.Matrix(zoom_factor, zoom_factor)  # Create a transformation matrix for the desired zoom
-        pix = page.get_pixmap(matrix=mat)  # Render page with the transformation matrix
-
-        with tempfile.NamedTemporaryFile(delete=True, suffix=".png") as tmpfile:
-            pix.save(tmpfile.name)  # Save the pixmap to a temporary file
-            img_width, img_height = pix.width, pix.height
-            # Adjust page size based on zoomed image dimensions
-            c.setPageSize((img_width / zoom_factor, img_height / zoom_factor))
-            c.drawInlineImage(tmpfile.name, 0, 0, width=img_width / zoom_factor, height=img_height / zoom_factor)
-            c.showPage()
-
-    c.save()
-
-    # Clean up
-    doc.close()
+    try:
+        # Open input PDF
+        if isinstance(input_pdf, str):
+            doc = fitz.open(input_pdf)
+        else:
+            input_pdf.seek(0)
+            doc = fitz.open(stream=input_pdf.read(), filetype="pdf")
+        
+        # Perform text replacements
+        for page in doc:
+            for placeholder, replacement in replacements.items():
+                text_instances = page.search_for(placeholder)
+                for inst in text_instances:
+                    rect = fitz.Rect(inst[0], inst[1], inst[2], inst[3])
+                    page.add_redact_annot(rect)
+                    page.apply_redactions()
+                    page.insert_text(
+                        rect.bl + (0, 2),  # Slightly below original position
+                        replacement,
+                        fontsize=11,
+                        fontname="helv",
+                        color=(0, 0, 0)
+                    )
+        
+        # Save to output
+        if isinstance(output_pdf, str):
+            doc.save(output_pdf)
+        else:
+            doc.save(output_pdf, garbage=4, deflate=True)
+        
+        doc.close()
+        
+    except Exception as e:
+        logging.error(f"Error in replace_text: {str(e)}", exc_info=True)
+        raise
     
 def send_email_with_attachment(subject, body, to_email, pdf_buffer, filename="invoice.pdf"):
     try:
@@ -158,7 +155,9 @@ def generate_invoice(data):
         customer_address = data['customer_address']
         customer_contact = data['customer_contact']
 
-        # Create a pdf object with modified document dimensions
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+            temp_path = tmp_file.name
+        
         pdf = fpdf.FPDF(format=(260, 420))
         pdf.add_page()
         pdf.set_font("Arial", size=20)
@@ -320,40 +319,29 @@ def generate_invoice(data):
         pdf.cell(205, 20, txt=f"90% Advance Payment and 10% after testing commissioning:", border=1, ln=0, align="C", fill=True)
         pdf.cell(35, 20, txt=f"{int(advance_payment)}", border=1, ln=1, align="C", fill=True)
 
-        # Add the description table (truncated for brevity)
-        # ...existing code for adding table and other details...
-
-        # Generate the PDF in memory
-        initial_pdf_buffer = io.BytesIO()
-        pdf.output(initial_pdf_buffer)
-        initial_pdf_buffer.seek(0)
+        pdf.output(temp_path)
         
-        # 2. Save to temporary file (PyMuPDF needs file paths)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-            tmp_file.write(initial_pdf_buffer.getvalue())
-            temp_path = tmp_file.name
-        
-        # 3. Define replacements
+        # Step 2: Define text replacements
         replacements = {
             "[NAME]": data['customer_name'],
             "[System Power]": str(data['system_size']),
             "[System Type]": "Solar System"
+            # Add other template placeholders as needed
         }
         
-        # 4. Create final PDF buffer
-        final_pdf_buffer = io.BytesIO()
+        # Step 3: Perform text replacement
+        output_buffer = io.BytesIO()
+        replace_text(temp_path, output_buffer, replacements)
         
-        # 5. Process template replacement
-        template_path = "template.pdf"  # Make sure this is accessible
-        replace_text(template_path, final_pdf_buffer, replacements)
-        
-        # Clean up temp file
+        # Clean up
         os.unlink(temp_path)
         
-        final_pdf_buffer.seek(0)
-        return final_pdf_buffer
+        output_buffer.seek(0)
+        return output_buffer
 
     except Exception as e:
         logging.error(f"Error in generate_invoice: {str(e)}", exc_info=True)
+        if os.path.exists(temp_path):
+            os.unlink(temp_path)
         raise
 
