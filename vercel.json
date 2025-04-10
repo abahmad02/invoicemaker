@@ -1,0 +1,8 @@
+{
+    "functions": {
+      "api/generate_invoice.py": {
+        "runtime": "python3.9"
+      }
+    }
+  }
+  

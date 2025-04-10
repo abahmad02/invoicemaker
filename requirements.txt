@@ -1,0 +1,4 @@
+fpdf
+PyPDF2
+PyMuPDF
+reportlab
