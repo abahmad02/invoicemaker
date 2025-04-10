@@ -92,6 +92,9 @@ def send_email_with_attachment(subject, body, to_email, pdf_buffer, filename="in
     from_email = os.getenv("EMAIL_USERNAME")
     from_password = os.getenv("EMAIL_PASSWORD")
 
+    if from_email is None or from_password is None:
+        raise ValueError("EMAIL_USERNAME and EMAIL_PASSWORD environment variables must be set")
+
     msg = MIMEMultipart()
     msg['From'] = from_email
     msg['To'] = to_email
@@ -104,11 +107,14 @@ def send_email_with_attachment(subject, body, to_email, pdf_buffer, filename="in
     part['Content-Disposition'] = f'attachment; filename="{filename}"'
     msg.attach(part)
 
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.starttls()
-    server.login(from_email, from_password)
-    server.sendmail(from_email, to_email, msg.as_string())
-    server.quit()
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(from_email, from_password)
+        server.sendmail(from_email, to_email, msg.as_string())
+        server.quit()
+    except Exception as e:
+        raise Exception(f"Failed to send email: {str(e)}")
 
     
 
