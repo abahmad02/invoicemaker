@@ -88,44 +88,27 @@ def replace_text(input_pdf, output_pdf, replacements, zoom_factor=3.0):
     # Clean up
     doc.close()
     
-def send_email_with_attachment(subject, body, to_email, attachment_path):
-    from_email = "royaltaj.care@gmail.com"  # replace with your email
-    from_password = "gxsd elyy djzb kldu"  # replace with your email password
+def send_email_with_attachment(subject, body, to_email, pdf_buffer, filename="invoice.pdf"):
+    from_email = os.getenv("EMAIL_USERNAME")
+    from_password = os.getenv("EMAIL_PASSWORD")
 
-    # Create a multipart message
     msg = MIMEMultipart()
     msg['From'] = from_email
     msg['To'] = to_email
     msg['Subject'] = subject
-
-    # Attach the body with the msg instance
     msg.attach(MIMEText(body, 'plain'))
 
-    # Open the file as binary mode
-    with open(attachment_path, "rb") as attachment:
-        part = MIMEBase("application", "octet-stream")
-        part.set_payload(attachment.read())
-
-    # Encode the file in ASCII characters to send by email    
-    encoders.encode_base64(part)
-
-    # Add header as key/value pair to the attachment part
-    part.add_header(
-        "Content-Disposition",
-        f"attachment; filename= {os.path.basename(attachment_path)}",
-    )
-
-    # Attach the attachment to the MIMEMultipart object
+    # Use BytesIO buffer as attachment
+    part = MIMEApplication(pdf_buffer.read(), Name=filename)
+    part['Content-Disposition'] = f'attachment; filename="{filename}"'
     msg.attach(part)
 
-    # Create SMTP session for sending the mail
-    server = smtplib.SMTP('smtp.gmail.com', 587)  # Use your SMTP server details
-    server.starttls()  # enable security
-    server.login(from_email, from_password)  # login with your email and password
-    text = msg.as_string()
-    server.sendmail(from_email, to_email, text)
-    print(f"Email sent to {to_email}")
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    server.login(from_email, from_password)
+    server.sendmail(from_email, to_email, msg.as_string())
     server.quit()
+
     
 
 def generate_invoice(data):
