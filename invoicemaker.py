@@ -93,37 +93,53 @@ def replace_text(input_pdf, output_pdf, replacements, zoom_factor=3.0):
     doc.close()
     
 def send_email_with_attachment(subject, body, to_email, pdf_buffer, filename="invoice.pdf"):
-    from_email = os.getenv("EMAIL_USERNAME")
-    from_password = os.getenv("EMAIL_PASSWORD")
-
-    if from_email is None or from_password is None:
-        raise ValueError("EMAIL_USERNAME and EMAIL_PASSWORD environment variables must be set")
-
-    msg = MIMEMultipart()
-    msg['From'] = from_email
-    msg['To'] = to_email
-    msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
-
-    # Read the BytesIO buffer and attach it as bytes
-    pdf_buffer.seek(0)  # Ensure the buffer is at the beginning
-    part = MIMEApplication(pdf_buffer.read(), Name=filename)
-    part['Content-Disposition'] = f'attachment; filename="{filename}"'
-    msg.attach(part)
-
     try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(from_email, from_password)
-        server.sendmail(from_email, to_email, msg.as_string())
-        server.quit()
-    except Exception as e:
-        raise Exception(f"Failed to send email: {str(e)}")
+        logging.debug(f"Preparing to send email to {to_email}")
+        
+        # Validate PDF buffer
+        if not pdf_buffer:
+            raise ValueError("PDF buffer is empty")
+            
+        pdf_buffer.seek(0)
+        content = pdf_buffer.read()
+        if not content:
+            raise ValueError("PDF buffer contains no data")
+            
+        logging.debug(f"PDF content size: {len(content)} bytes")
+        from_email = os.getenv("EMAIL_USERNAME")
+        from_password = os.getenv("EMAIL_PASSWORD")
 
+        if from_email is None or from_password is None:
+            raise ValueError("EMAIL_USERNAME and EMAIL_PASSWORD environment variables must be set")
+
+        msg = MIMEMultipart()
+        msg['From'] = from_email
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
+
+        # Read the BytesIO buffer and attach it as bytes
+        pdf_buffer.seek(0)  # Ensure the buffer is at the beginning
+        part = MIMEApplication(pdf_buffer.read(), Name=filename)
+        part['Content-Disposition'] = f'attachment; filename="{filename}"'
+        msg.attach(part)
+
+        try:
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(from_email, from_password)
+            server.sendmail(from_email, to_email, msg.as_string())
+            server.quit()
+        except Exception as e:
+            raise Exception(f"Failed to send email: {str(e)}")
+    except Exception as e:
+        logging.error(f"Error in send_email_with_attachment: {str(e)}", exc_info=True)
+        raise
     
 
 def generate_invoice(data):
-    # Extract data from the input dictionary
+    # Extract data from the input 
+    logging.debug("Starting invoice generation...")
     system_size = data['system_size']
     panel_amount = data['panel_amount']
     panel_power = data['panel_power']
@@ -307,8 +323,12 @@ def generate_invoice(data):
 
     # Generate the PDF in memory
     pdf_buffer = io.BytesIO()
+    logging.debug("Created BytesIO buffer")
     pdf.output(pdf_buffer)
+    logging.debug("PDF output written to buffer")
+        
     pdf_buffer.seek(0)
+    logging.debug(f"Buffer size: {len(pdf_buffer.getvalue())} bytes")
     
     # Create a temporary file for the final output
     final_pdf_buffer = io.BytesIO()
@@ -325,3 +345,4 @@ def generate_invoice(data):
     replace_text(template_path, final_pdf_buffer, replacements)
     
     return final_pdf_buffer
+
