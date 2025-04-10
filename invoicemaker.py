@@ -54,9 +54,8 @@ import fitz  # Import the PyMuPDF library
 
 def replace_text(input_pdf, output_pdf, replacements, zoom_factor=3.0):
     # Open the existing PDF
-    # Detect if input_pdf is a BytesIO; if so, open from its bytes
     if isinstance(input_pdf, io.BytesIO):
-        input_pdf.seek(0)
+        input_pdf.seek(0)  # Ensure we're at the start of the stream
         doc = fitz.open(stream=input_pdf.read(), filetype="pdf")
     else:
         doc = fitz.open(input_pdf)
@@ -310,5 +309,19 @@ def generate_invoice(data):
     pdf_buffer = io.BytesIO()
     pdf.output(pdf_buffer)
     pdf_buffer.seek(0)
-
-    return pdf_buffer
+    
+    # Create a temporary file for the final output
+    final_pdf_buffer = io.BytesIO()
+    
+    # Define replacements for the template
+    replacements = {
+        "[NAME]": data['customer_name'],
+        "[System Power]": str(data['system_size']),
+        "[System Type]": "Solar"  # You can add more fields as needed
+    }
+    
+    # Replace text in the template
+    template_path = "template.pdf"  # Make sure this path is correct
+    replace_text(template_path, final_pdf_buffer, replacements)
+    
+    return final_pdf_buffer
