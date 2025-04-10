@@ -139,211 +139,221 @@ def send_email_with_attachment(subject, body, to_email, pdf_buffer, filename="in
     
 
 def generate_invoice(data):
-    # Extract data from the input 
-    logging.debug("Starting invoice generation...")
-    system_size = data['system_size']
-    panel_amount = data['panel_amount']
-    panel_power = data['panel_power']
-    price_of_inverter = data['price_of_inverter']
-    brand_of_inverter = data['brand_of_inverter']
-    price_of_panels = data['price_of_panels']
-    netmetering_costs = data['netmetering_costs']
-    installation_costs = data['installation_costs']
-    cabling_costs = data['cabling_costs']
-    structure_costs = data['structure_costs']
-    electrical_and_mechanical_costs = data['electrical_and_mechanical_costs']
-    total_cost = data['total_cost']
-    customer_name = data['customer_name']
-    customer_address = data['customer_address']
-    customer_contact = data['customer_contact']
+    try:
+        # Extract data from the input 
+        logging.debug("Starting invoice generation...")
+        system_size = data['system_size']
+        panel_amount = data['panel_amount']
+        panel_power = data['panel_power']
+        price_of_inverter = data['price_of_inverter']
+        brand_of_inverter = data['brand_of_inverter']
+        price_of_panels = data['price_of_panels']
+        netmetering_costs = data['netmetering_costs']
+        installation_costs = data['installation_costs']
+        cabling_costs = data['cabling_costs']
+        structure_costs = data['structure_costs']
+        electrical_and_mechanical_costs = data['electrical_and_mechanical_costs']
+        total_cost = data['total_cost']
+        customer_name = data['customer_name']
+        customer_address = data['customer_address']
+        customer_contact = data['customer_contact']
 
-    # Create a pdf object with modified document dimensions
-    pdf = fpdf.FPDF(format=(260, 420))
-    pdf.add_page()
-    pdf.set_font("Arial", size=20)
-    pdf.set_text_color(0, 0, 0)
-    advance_payment = float(total_cost) * 0.9
+        # Create a pdf object with modified document dimensions
+        pdf = fpdf.FPDF(format=(260, 420))
+        pdf.add_page()
+        pdf.set_font("Arial", size=20)
+        pdf.set_text_color(0, 0, 0)
+        advance_payment = float(total_cost) * 0.9
 
-    # Add the header section
-    pdf.cell(240, 10, txt="Energy Cove Solar System Invoice", ln=1, align="C")
-    pdf.set_font("Arial", size=12)
-    pdf.cell(120, 10, txt=f"Customer Name: {customer_name}", ln=0, align="L")
-    pdf.cell(120, 10, txt=f"Quotation Date: {datetime.date.today()}", ln=1, align="R")
-    pdf.cell(120, 10, txt=f"Customer Address: {customer_address}", ln=0, align="L")
-    pdf.cell(120, 10, txt=f"Present Date: {datetime.date.today()}", ln=1, align="R")
-    pdf.cell(120, 10, txt=f"Customer Contact: {customer_contact}", ln=1, align="L")
+        # Add the header section
+        pdf.cell(240, 10, txt="Energy Cove Solar System Invoice", ln=1, align="C")
+        pdf.set_font("Arial", size=12)
+        pdf.cell(120, 10, txt=f"Customer Name: {customer_name}", ln=0, align="L")
+        pdf.cell(120, 10, txt=f"Quotation Date: {datetime.date.today()}", ln=1, align="R")
+        pdf.cell(120, 10, txt=f"Customer Address: {customer_address}", ln=0, align="L")
+        pdf.cell(120, 10, txt=f"Present Date: {datetime.date.today()}", ln=1, align="R")
+        pdf.cell(120, 10, txt=f"Customer Contact: {customer_contact}", ln=1, align="L")
 
-    # Add the system size and type section
-    pdf.set_fill_color(255, 255, 0)
-    pdf.set_font("Arial", size=18)  
-    
-    pdf.cell(240, 10, txt=f"{system_size} kW | Solar System", ln=1, align="C",border=1, fill=True)
-
-    # Add the description table
-    pdf.set_fill_color(255, 255, 255)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(15, 10, txt="S.No", border=1, ln=0, align="C", fill=True)
-    pdf.cell(190, 10, txt="Description", border=1, ln=0, align="C", fill=True)
-    pdf.cell(15, 10, txt="QTY", border=1, ln=0, align="C", fill=True)
-    pdf.cell(20, 10, txt="Price", border=1, ln=1, align="C", fill=True)
-
-    pdf.cell(15, 30, txt="1", border=1, ln=0, align="C", fill=True)
-    pdf.set_fill_color(255, 255, 0)
-    pdf.set_font("Arial", size=16)
-    pdf.cell(190, 20, txt="PV Panels", border=1, ln=0, align="C", fill=True)
-    pdf.set_fill_color(255, 255, 255)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(15, 20, txt=f"{panel_amount}", border="L, R,T", ln=0, align="C", fill=True)
-    pdf.cell(20, 20, txt=f"{price_of_panels}", border="L,R,T", ln=1, align="R", fill=True)  
-    pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
-    pdf.cell(95, 10, txt=f"Brand: ", border=1, ln=0, align="L", fill=True)
-    pdf.cell(95, 10, txt=f"Power Rating: {panel_power}", border=1, ln=0, align="L", fill=True)
-    pdf.cell(15, 10, txt="", border="L,R,B")  # Empty cell to create space
-    pdf.cell(20, 10, txt="", border="L,R,B", ln=1)  # Empty cell to create space
-
-
-    pdf.cell(15, 40, txt="2", border=1, ln=0, align="C", fill=True)
-    pdf.set_fill_color(255, 255, 0)
-    pdf.set_font("Arial", size=16)
-    pdf.cell(190, 20, txt="Inverter & Accessories", border=1, ln=0, align="C", fill=True)
-    pdf.set_fill_color(255, 255, 255)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(15, 20, txt=f"", border="L, R, T", ln=0, align="C", fill=True)
-    pdf.cell(20, 20, txt=f"", border="L,R, T", ln=1, align="R", fill=True)  
-    pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
-    pdf.cell(63.3, 10, txt=f"Brand: {brand_of_inverter}", border=1, ln=0, align="L", fill=True)
-    pdf.cell(63.3, 10, txt=f"Power Rating: {system_size}kW", border=1, ln=0, align="L", fill=True)
-    pdf.cell(63.4, 10, txt=f"Model: On-Grid", border=1, ln=0, align="L", fill=True)
-    pdf.cell(15, 10, txt="1", border="L,R", align="C")  # Empty cell to create space
-    pdf.cell(20, 10, txt=f"{int(float(price_of_inverter))}", border="L,R", ln=1, align="R")  # Empty cell to create space
-    pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
-    pdf.cell(190, 10, txt=f"Monitoring Device Included/ 5 Years warranty / System Produces 1200 Units per month", border=1, ln=0, align="L", fill=True)
-    pdf.cell(15, 10, txt=f"", border="L, R,B", ln=0, align="C", fill=True)
-    pdf.cell(20, 10, txt=f"", border="L,R,B", ln=1, align="R", fill=True)  
-
-    pdf.cell(15, 40, txt="3", border=1, ln=0, align="C", fill=True)
-    pdf.set_fill_color(255, 255, 0)
-    pdf.set_font("Arial", size=14)
-    pdf.cell(190, 10, txt="DC Cable & Earthing", border=1, ln=0, align="C", fill=True)
-    pdf.set_fill_color(255, 255, 255)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(15, 10, txt=f"", border="L, R,T", ln=0, align="C", fill=True)
-    pdf.cell(20, 10, txt=f"", border="L,R,T", ln=1, align="R", fill=True)  
-    pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
-    pdf.cell(95, 10, txt="DC Cable: 1000 VDC, 4mm as required by design & PVC Conduits", border=1, ln=0, align="L", fill=True)
-    pdf.cell(95, 10, txt="Protection Box with Circuit Breakers, Fuses", border=1, ln=0, align="L", fill=True)
-    pdf.cell(15, 10, txt="1", border="L,R", ln=0, align="C", fill=True)
-    pdf.cell(20, 10, txt=f"{cabling_costs}", border="L,R", ln=1, align="R", fill=True)
-    pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
-    pdf.set_fill_color(255, 255, 0)
-    pdf.set_font("Arial", size=14)
-    pdf.cell(190, 10, txt="AC Cable", border=1, ln=0, align="C", fill=True)
-    pdf.set_fill_color(255, 255, 255)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(15, 10, txt=f"", border="L, R", ln=0, align="C", fill=True)
-    pdf.cell(20, 10, txt=f"", border="L,R", ln=1, align="R", fill=True)  
-    pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
-    pdf.cell(190, 10, txt="AC Cable: 0.415kV as per required design (10 Meter from Inverter to Main DB )", border=1, ln=0, align="L", fill=True)
-    pdf.cell(15, 10, txt="", border="L,R,B", ln=0, align="C", fill=True)
-    pdf.cell(20, 10, txt=f"", border="L,R,B", ln=1, align="R", fill=True)
-
-    pdf.cell(15, 30, txt="4", border=1, ln=0, align="C", fill=True)
-    pdf.set_fill_color(255, 255, 0)
-    pdf.set_font("Arial", size=16)
-    pdf.cell(190, 20, txt="PV Panels Structure", border=1, ln=0, align="C", fill=True)
-    pdf.set_fill_color(255, 255, 255)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(15, 20, txt=f"1", border="L, R,T", ln=0, align="C", fill=True)
-    pdf.cell(20, 20, txt=f"{int(float(structure_costs))}", border="L,R,T", ln=1, align="R", fill=True)  
-    pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
-    pdf.cell(190, 10, txt=f"Customized frames with steel pipes & Chanels 14 guage and painting for 18 panels", border=1, ln=0, align="L", fill=True)
-    pdf.cell(15, 10, txt="", border="L,R,B")  # Empty cell to create space
-    pdf.cell(20, 10, txt="", border="L,R,B", ln=1)  # Empty cell to create space
-
-    pdf.cell(15, 50, txt="5", border=1, ln=0, align="C", fill=True)
-    pdf.set_fill_color(255, 255, 0)
-    pdf.set_font("Arial", size=16)
-    pdf.cell(190, 20, txt="Balance of System / Installation & Commissioning", border=1, ln=0, align="C", fill=True)
-    pdf.set_fill_color(255, 255, 255)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(15, 20, txt=f"", border="L, R,T", ln=0, align="C", fill=True)
-    pdf.cell(20, 20, txt=f"", border="L,R,T", ln=1, align="R", fill=True)  
-    pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
-    pdf.cell(190, 10, txt=f"AC/DC Cable Trau, Flexible Pipes, Conduits, Rawal Bolts, Cable Ties, Lugs & other accessories", border=1, ln=0, align="L", fill=True)
-    pdf.cell(15, 10, txt="1", border="L,R", align="C")  # Empty cell to create space
-    pdf.cell(20, 10, txt=f"{int(float(installation_costs))}", border="L,R", ln=1, align="R")  # Empty cell to create space
-    pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
-    pdf.cell(190, 10, txt=f"Transportation Cost", border=1, ln=0, align="L", fill=True)
-    pdf.cell(15, 10, txt="", border="L,R")  # Empty cell to create space
-    pdf.cell(20, 10, txt="", border="L,R", ln=1)  # Empty cell to create space
-    pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
-    pdf.cell(190, 10, txt=f"Earthing system AC/DC", border=1, ln=0, align="L", fill=True)
-    pdf.cell(15, 10, txt="", border="L,R,B")  # Empty cell to create space
-    pdf.cell(20, 10, txt="", border="L,R,B", ln=1)  # Empty cell to create space
-
-    pdf.cell(15, 30, txt="6", border=1, ln=0, align="C", fill=True)
-    pdf.set_fill_color(255, 255, 0)
-    pdf.set_font("Arial", size=16)
-    pdf.cell(190, 20, txt="Installation & Commissioning ", border=1, ln=0, align="C", fill=True)
-    pdf.set_fill_color(255, 255, 255)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(15, 20, txt=f"1", border="L, R,T", ln=0, align="C", fill=True)
-    pdf.cell(20, 20, txt=f"{int(float(electrical_and_mechanical_costs))}", border="L,R,T", ln=1, align="R", fill=True)  
-    pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
-    pdf.cell(190, 10, txt=f"Electrical & Mechanical work", border=1, ln=0, align="L", fill=True)
-    pdf.cell(15, 10, txt="", border="L,R,B")  # Empty cell to create space
-    pdf.cell(20, 10, txt="", border="L,R,B", ln=1)  # Empty cell to create space
-    # Add the netmetering section
-    pdf.cell(15, 40, txt="7", border=1, ln=0, align="C", fill=True)
-    pdf.set_fill_color(255, 255, 0)
-    pdf.set_font("Arial", size=16)
-    pdf.cell(190, 20, txt="Netmetering", border=1, ln=0, align="C", fill=True)
-    pdf.set_fill_color(255, 255, 255)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(15, 20, txt=f"", border="L, R,T", ln=0, align="C", fill=True)
-    pdf.cell(20, 20, txt=f"", border="L,R,T", ln=1, align="R", fill=True)  
-    pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
-    pdf.cell(95, 10, txt=f"Preparation of file - Dealing with MEPCO", border=1, ln=0, align="L", fill=True)
-    pdf.cell(95, 10, txt=f"2 Reverse meters supply", border=1, ln=0, align="L", fill=True)
-    pdf.cell(15, 10, txt="1", border="L,R" , align="C")  # Empty cell to create space
-    pdf.cell(20, 10, txt=f"{int(float(netmetering_costs))}", border="L,R", ln=1, align="R")  # Empty cell to create space
-    pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
-    pdf.cell(190, 10, txt=f"Load extension / Main wire from green meters to Main DB of house in the scope of client", border=1, ln=0, align="L", fill=True)
-    pdf.cell(15, 10, txt="", border="L,R,B")  # Empty cell to create space
-    pdf.cell(20, 10, txt="", border="L,R,B", ln=1)  # Empty cell to create space
-    # Add the total system cost section
-    pdf.set_fill_color(0, 128, 0)
-    pdf.set_font("Arial", size=15)
-    pdf.cell(205, 20, txt=f"Total System Cost:",border=1, ln=0, align="C", fill=True)
-    pdf.cell(35, 20, txt=f"{int(total_cost)}", border=1, ln=1, align="C", fill=True)
-    pdf.cell(205, 20, txt=f"90% Advance Payment and 10% after testing commissioning:", border=1, ln=0, align="C", fill=True)
-    pdf.cell(35, 20, txt=f"{int(advance_payment)}", border=1, ln=1, align="C", fill=True)
-
-    # Add the description table (truncated for brevity)
-    # ...existing code for adding table and other details...
-
-    # Generate the PDF in memory
-    pdf_buffer = io.BytesIO()
-    logging.debug("Created BytesIO buffer")
-    pdf.output(pdf_buffer)
-    logging.debug("PDF output written to buffer")
+        # Add the system size and type section
+        pdf.set_fill_color(255, 255, 0)
+        pdf.set_font("Arial", size=18)  
         
-    pdf_buffer.seek(0)
-    logging.debug(f"Buffer size: {len(pdf_buffer.getvalue())} bytes")
-    
-    # Create a temporary file for the final output
-    final_pdf_buffer = io.BytesIO()
-    
-    # Define replacements for the template
-    replacements = {
-        "[NAME]": data['customer_name'],
-        "[System Power]": str(data['system_size']),
-        "[System Type]": "Solar"  # You can add more fields as needed
-    }
-    
-    # Replace text in the template
-    template_path = "template.pdf"  # Make sure this path is correct
-    replace_text(template_path, final_pdf_buffer, replacements)
-    
-    return final_pdf_buffer
+        pdf.cell(240, 10, txt=f"{system_size} kW | Solar System", ln=1, align="C",border=1, fill=True)
+
+        # Add the description table
+        pdf.set_fill_color(255, 255, 255)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(15, 10, txt="S.No", border=1, ln=0, align="C", fill=True)
+        pdf.cell(190, 10, txt="Description", border=1, ln=0, align="C", fill=True)
+        pdf.cell(15, 10, txt="QTY", border=1, ln=0, align="C", fill=True)
+        pdf.cell(20, 10, txt="Price", border=1, ln=1, align="C", fill=True)
+
+        pdf.cell(15, 30, txt="1", border=1, ln=0, align="C", fill=True)
+        pdf.set_fill_color(255, 255, 0)
+        pdf.set_font("Arial", size=16)
+        pdf.cell(190, 20, txt="PV Panels", border=1, ln=0, align="C", fill=True)
+        pdf.set_fill_color(255, 255, 255)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(15, 20, txt=f"{panel_amount}", border="L, R,T", ln=0, align="C", fill=True)
+        pdf.cell(20, 20, txt=f"{price_of_panels}", border="L,R,T", ln=1, align="R", fill=True)  
+        pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
+        pdf.cell(95, 10, txt=f"Brand: ", border=1, ln=0, align="L", fill=True)
+        pdf.cell(95, 10, txt=f"Power Rating: {panel_power}", border=1, ln=0, align="L", fill=True)
+        pdf.cell(15, 10, txt="", border="L,R,B")  # Empty cell to create space
+        pdf.cell(20, 10, txt="", border="L,R,B", ln=1)  # Empty cell to create space
+
+
+        pdf.cell(15, 40, txt="2", border=1, ln=0, align="C", fill=True)
+        pdf.set_fill_color(255, 255, 0)
+        pdf.set_font("Arial", size=16)
+        pdf.cell(190, 20, txt="Inverter & Accessories", border=1, ln=0, align="C", fill=True)
+        pdf.set_fill_color(255, 255, 255)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(15, 20, txt=f"", border="L, R, T", ln=0, align="C", fill=True)
+        pdf.cell(20, 20, txt=f"", border="L,R, T", ln=1, align="R", fill=True)  
+        pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
+        pdf.cell(63.3, 10, txt=f"Brand: {brand_of_inverter}", border=1, ln=0, align="L", fill=True)
+        pdf.cell(63.3, 10, txt=f"Power Rating: {system_size}kW", border=1, ln=0, align="L", fill=True)
+        pdf.cell(63.4, 10, txt=f"Model: On-Grid", border=1, ln=0, align="L", fill=True)
+        pdf.cell(15, 10, txt="1", border="L,R", align="C")  # Empty cell to create space
+        pdf.cell(20, 10, txt=f"{int(float(price_of_inverter))}", border="L,R", ln=1, align="R")  # Empty cell to create space
+        pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
+        pdf.cell(190, 10, txt=f"Monitoring Device Included/ 5 Years warranty / System Produces 1200 Units per month", border=1, ln=0, align="L", fill=True)
+        pdf.cell(15, 10, txt=f"", border="L, R,B", ln=0, align="C", fill=True)
+        pdf.cell(20, 10, txt=f"", border="L,R,B", ln=1, align="R", fill=True)  
+
+        pdf.cell(15, 40, txt="3", border=1, ln=0, align="C", fill=True)
+        pdf.set_fill_color(255, 255, 0)
+        pdf.set_font("Arial", size=14)
+        pdf.cell(190, 10, txt="DC Cable & Earthing", border=1, ln=0, align="C", fill=True)
+        pdf.set_fill_color(255, 255, 255)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(15, 10, txt=f"", border="L, R,T", ln=0, align="C", fill=True)
+        pdf.cell(20, 10, txt=f"", border="L,R,T", ln=1, align="R", fill=True)  
+        pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
+        pdf.cell(95, 10, txt="DC Cable: 1000 VDC, 4mm as required by design & PVC Conduits", border=1, ln=0, align="L", fill=True)
+        pdf.cell(95, 10, txt="Protection Box with Circuit Breakers, Fuses", border=1, ln=0, align="L", fill=True)
+        pdf.cell(15, 10, txt="1", border="L,R", ln=0, align="C", fill=True)
+        pdf.cell(20, 10, txt=f"{cabling_costs}", border="L,R", ln=1, align="R", fill=True)
+        pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
+        pdf.set_fill_color(255, 255, 0)
+        pdf.set_font("Arial", size=14)
+        pdf.cell(190, 10, txt="AC Cable", border=1, ln=0, align="C", fill=True)
+        pdf.set_fill_color(255, 255, 255)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(15, 10, txt=f"", border="L, R", ln=0, align="C", fill=True)
+        pdf.cell(20, 10, txt=f"", border="L,R", ln=1, align="R", fill=True)  
+        pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
+        pdf.cell(190, 10, txt="AC Cable: 0.415kV as per required design (10 Meter from Inverter to Main DB )", border=1, ln=0, align="L", fill=True)
+        pdf.cell(15, 10, txt="", border="L,R,B", ln=0, align="C", fill=True)
+        pdf.cell(20, 10, txt=f"", border="L,R,B", ln=1, align="R", fill=True)
+
+        pdf.cell(15, 30, txt="4", border=1, ln=0, align="C", fill=True)
+        pdf.set_fill_color(255, 255, 0)
+        pdf.set_font("Arial", size=16)
+        pdf.cell(190, 20, txt="PV Panels Structure", border=1, ln=0, align="C", fill=True)
+        pdf.set_fill_color(255, 255, 255)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(15, 20, txt=f"1", border="L, R,T", ln=0, align="C", fill=True)
+        pdf.cell(20, 20, txt=f"{int(float(structure_costs))}", border="L,R,T", ln=1, align="R", fill=True)  
+        pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
+        pdf.cell(190, 10, txt=f"Customized frames with steel pipes & Chanels 14 guage and painting for 18 panels", border=1, ln=0, align="L", fill=True)
+        pdf.cell(15, 10, txt="", border="L,R,B")  # Empty cell to create space
+        pdf.cell(20, 10, txt="", border="L,R,B", ln=1)  # Empty cell to create space
+
+        pdf.cell(15, 50, txt="5", border=1, ln=0, align="C", fill=True)
+        pdf.set_fill_color(255, 255, 0)
+        pdf.set_font("Arial", size=16)
+        pdf.cell(190, 20, txt="Balance of System / Installation & Commissioning", border=1, ln=0, align="C", fill=True)
+        pdf.set_fill_color(255, 255, 255)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(15, 20, txt=f"", border="L, R,T", ln=0, align="C", fill=True)
+        pdf.cell(20, 20, txt=f"", border="L,R,T", ln=1, align="R", fill=True)  
+        pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
+        pdf.cell(190, 10, txt=f"AC/DC Cable Trau, Flexible Pipes, Conduits, Rawal Bolts, Cable Ties, Lugs & other accessories", border=1, ln=0, align="L", fill=True)
+        pdf.cell(15, 10, txt="1", border="L,R", align="C")  # Empty cell to create space
+        pdf.cell(20, 10, txt=f"{int(float(installation_costs))}", border="L,R", ln=1, align="R")  # Empty cell to create space
+        pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
+        pdf.cell(190, 10, txt=f"Transportation Cost", border=1, ln=0, align="L", fill=True)
+        pdf.cell(15, 10, txt="", border="L,R")  # Empty cell to create space
+        pdf.cell(20, 10, txt="", border="L,R", ln=1)  # Empty cell to create space
+        pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
+        pdf.cell(190, 10, txt=f"Earthing system AC/DC", border=1, ln=0, align="L", fill=True)
+        pdf.cell(15, 10, txt="", border="L,R,B")  # Empty cell to create space
+        pdf.cell(20, 10, txt="", border="L,R,B", ln=1)  # Empty cell to create space
+
+        pdf.cell(15, 30, txt="6", border=1, ln=0, align="C", fill=True)
+        pdf.set_fill_color(255, 255, 0)
+        pdf.set_font("Arial", size=16)
+        pdf.cell(190, 20, txt="Installation & Commissioning ", border=1, ln=0, align="C", fill=True)
+        pdf.set_fill_color(255, 255, 255)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(15, 20, txt=f"1", border="L, R,T", ln=0, align="C", fill=True)
+        pdf.cell(20, 20, txt=f"{int(float(electrical_and_mechanical_costs))}", border="L,R,T", ln=1, align="R", fill=True)  
+        pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
+        pdf.cell(190, 10, txt=f"Electrical & Mechanical work", border=1, ln=0, align="L", fill=True)
+        pdf.cell(15, 10, txt="", border="L,R,B")  # Empty cell to create space
+        pdf.cell(20, 10, txt="", border="L,R,B", ln=1)  # Empty cell to create space
+        # Add the netmetering section
+        pdf.cell(15, 40, txt="7", border=1, ln=0, align="C", fill=True)
+        pdf.set_fill_color(255, 255, 0)
+        pdf.set_font("Arial", size=16)
+        pdf.cell(190, 20, txt="Netmetering", border=1, ln=0, align="C", fill=True)
+        pdf.set_fill_color(255, 255, 255)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(15, 20, txt=f"", border="L, R,T", ln=0, align="C", fill=True)
+        pdf.cell(20, 20, txt=f"", border="L,R,T", ln=1, align="R", fill=True)  
+        pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
+        pdf.cell(95, 10, txt=f"Preparation of file - Dealing with MEPCO", border=1, ln=0, align="L", fill=True)
+        pdf.cell(95, 10, txt=f"2 Reverse meters supply", border=1, ln=0, align="L", fill=True)
+        pdf.cell(15, 10, txt="1", border="L,R" , align="C")  # Empty cell to create space
+        pdf.cell(20, 10, txt=f"{int(float(netmetering_costs))}", border="L,R", ln=1, align="R")  # Empty cell to create space
+        pdf.cell(15, 10, txt="", border=0)  # Empty cell to create space
+        pdf.cell(190, 10, txt=f"Load extension / Main wire from green meters to Main DB of house in the scope of client", border=1, ln=0, align="L", fill=True)
+        pdf.cell(15, 10, txt="", border="L,R,B")  # Empty cell to create space
+        pdf.cell(20, 10, txt="", border="L,R,B", ln=1)  # Empty cell to create space
+        # Add the total system cost section
+        pdf.set_fill_color(0, 128, 0)
+        pdf.set_font("Arial", size=15)
+        pdf.cell(205, 20, txt=f"Total System Cost:",border=1, ln=0, align="C", fill=True)
+        pdf.cell(35, 20, txt=f"{int(total_cost)}", border=1, ln=1, align="C", fill=True)
+        pdf.cell(205, 20, txt=f"90% Advance Payment and 10% after testing commissioning:", border=1, ln=0, align="C", fill=True)
+        pdf.cell(35, 20, txt=f"{int(advance_payment)}", border=1, ln=1, align="C", fill=True)
+
+        # Add the description table (truncated for brevity)
+        # ...existing code for adding table and other details...
+
+        # Generate the PDF in memory
+        initial_pdf_buffer = io.BytesIO()
+        pdf.output(initial_pdf_buffer)
+        initial_pdf_buffer.seek(0)
+        
+        # 2. Save to temporary file (PyMuPDF needs file paths)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+            tmp_file.write(initial_pdf_buffer.getvalue())
+            temp_path = tmp_file.name
+        
+        # 3. Define replacements
+        replacements = {
+            "[NAME]": data['customer_name'],
+            "[System Power]": str(data['system_size']),
+            "[System Type]": "Solar System"
+        }
+        
+        # 4. Create final PDF buffer
+        final_pdf_buffer = io.BytesIO()
+        
+        # 5. Process template replacement
+        template_path = "template.pdf"  # Make sure this is accessible
+        replace_text(template_path, final_pdf_buffer, replacements)
+        
+        # Clean up temp file
+        os.unlink(temp_path)
+        
+        final_pdf_buffer.seek(0)
+        return final_pdf_buffer
+
+    except Exception as e:
+        logging.error(f"Error in generate_invoice: {str(e)}", exc_info=True)
+        raise
 
